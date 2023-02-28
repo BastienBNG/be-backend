@@ -2,14 +2,15 @@ from flask import Flask, request, jsonify
 import sqlite3
 import time
 from prometheus_flask_exporter import PrometheusMetrics
+from prometheus_client import Gauge
 
 
 app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
 
-
-
+# set the last score value to the metrics
+g = Gauge('Score', 'Last score added')
 
 
 #IDENTITE DU SPORTIF
@@ -226,6 +227,47 @@ def get_advice():
     conn.close()
 
     return jsonify({'Advice': Advice})
+
+#SCORE
+
+@app.route('/score', methods=['POST'])
+def score():
+    Athlete_ID = request.json['Athlete_ID']
+    Score = request.json['Score']
+    Date = time.strftime('%Y-%m-%d %H:%M:%S')
+
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO Score (Athlete_ID, Score, Date) VALUES (?, ?, ?)", (Athlete_ID, Score, Date))
+    conn.commit()
+    # retrieve the last score value from the database
+    c.execute("SELECT Score FROM Score ORDER BY Date DESC LIMIT 1")
+    last_score = c.fetchone()[0]
+    print(last_score)
+
+
+    conn.close()
+
+
+    
+
+    g.set(last_score)
+    #metrics.gauge('last_score', 'Last user score')(last_score)
+    #metric_name = 'Score'
+    #metrics.info(metric_name, 'Last user score', value=last_score)
+
+    return jsonify({'message': 'Score stats added successfully'})
+
+
+@app.route('/get_score', methods=['GET'])
+def get_score():
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM Score")
+    Score = c.fetchall()
+    conn.close()
+
+    return jsonify({'Score': Score})
 
 
 

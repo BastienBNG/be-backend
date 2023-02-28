@@ -15,3 +15,22 @@ tunnels:
   second:
     addr: 8080
     proto: http
+
+
+Test command :
+
+ADD USER : curl -X POST -H "Content-Type: application/json" -d '{"Sport":"Cyclisme","Prenom":"Jean","FamilyName":"Bernard", "Birth_Date":"1995/03/02"}' http://localhost:8080/identity -v
+
+SPORT : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Date_of_last_competition":"2023/05/20","Date_of_last_training":"2023/05/20", "Muscle_used_in_the_last_workout":"Jambe","Recovery_status":"2"}' http://localhost:8080/sport -v
+
+INJURY : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Date":"2023/05/20","Position":"Genoux", "Intensity":"2"}' http://localhost:8080/injuries -v
+
+SELF EVAL : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Sleep":"7","General_tiredness":"0", "Aches_pains":"Jambe","Mood_stress":"2", "Weight":"89"}' http://localhost:8080/selfeval -v
+
+TRAINING STAT : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Title":"Cardio","Description":"Entrainement de course", "Date":"2023/05/20", "Duration_time":"2h","Intensity_of_last_training":"4"}' http://localhost:8080/trainingstat -v
+
+STAFF : curl -X POST -H "Content-Type: application/json" -d '{"Staff_ID":"7","Name":"Jacques", "FamilyName":"Vier","Speciality":"Coach", "Phone_number":"0652945183"}' http://localhost:8080/staff -v
+
+ADVICE : curl -X POST -H "Content-Type: application/json" -d '{"Staff_ID":"1", "Athlete_ID":"2","Date":"2022/02/27", "Advice":"dors sale chien"}' http://localhost:8080/advice -v
+
+SCORE : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Score":"5"}' http://localhost:8080/score -v

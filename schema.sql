@@ -69,3 +69,9 @@ CREATE TABLE  Advice  (
      Date  date  NOT NULL ,
      Advice  string  NOT NULL 
 );
+
+CREATE TABLE  Score  (
+     Athlete_ID int NOT NULL ,
+     Score  int  NOT NULL ,
+     Date date NOT NULL
+);
