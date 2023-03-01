@@ -1,7 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: back-service
+  name: back
+  labels:
+    app: back
 spec:
   type: NodePort
   selector:
@@ -29,7 +31,7 @@ spec:
     spec:
       containers:
       - name:  back
-        image: bastienbng/be-backend
+        image: bastienbng/be-backend:1.2
         ports:
         - containerPort: 8080
 

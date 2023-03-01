@@ -9,7 +9,7 @@
 -- two dots ('..' - without quotes).
 
 CREATE TABLE Identity (
-     AthleteID  INTEGER INTEGER PRIMARY KEY,
+     Athlete_ID  INTEGER INTEGER PRIMARY KEY,
      Sport  string  NOT NULL ,
      Prenom  string  NOT NULL ,
      FamilyName  string  NOT NULL ,
@@ -49,6 +49,8 @@ CREATE TABLE  Staff  (
      FamilyName  string  NOT NULL ,
      Speciality  string  NOT NULL ,
      Phone_number  int  NOT NULL ,
+     email string NOT NULL ,
+     athlete_id string,
     PRIMARY KEY (
          Staff_ID 
     )

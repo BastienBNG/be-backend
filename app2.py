@@ -2,21 +2,32 @@ from flask import Flask, request, jsonify
 import sqlite3
 import time
 from prometheus_flask_exporter import PrometheusMetrics
-from prometheus_client import Gauge
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
 metrics = PrometheusMetrics(app)
 
-
 # set the last score value to the metrics
-g = Gauge('Score', 'Last score added')
+#g = Gauge('Score', 'Last score added')
+
+info = metrics.info('Score', 'Last score added')
+
+load_dotenv()
+# Remplir les détails du compte Gmail
+MY_ADDRESS = 'bongiornobastien@gmail.com'
+PASSWORD = os.getenv('PASSWORD')
 
 
 #IDENTITE DU SPORTIF
 
 @app.route('/identity', methods=['POST'])
 def identity():
+    Athlete_ID = request.json['Athlete_ID']
     Sport = request.json['Sport']
     Prenom = request.json['Prenom']
     FamilyName = request.json['FamilyName']
@@ -24,7 +35,7 @@ def identity():
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Identity (Sport, Prenom, FamilyName, Birth_Date) VALUES (?, ?, ?, ?)", (Sport, Prenom, FamilyName, Birth_Date))
+    c.execute("INSERT INTO Identity (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date) VALUES (?, ?, ?, ?, ?)", (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date))
     conn.commit()
     conn.close()
 
@@ -179,14 +190,25 @@ def staff():
     FamilyName = request.json['FamilyName']
     Speciality = request.json['Speciality']
     Phone_number = request.json['Phone_number']
+    email = request.json['email']
+    NomSportif = request.json['NomSportif']
+    PrenomSportif = request.json['PrenomSportif']
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Staff (Staff_ID, Name, FamilyName, Speciality, Phone_number) VALUES (?, ?, ?, ?, ?)", (Staff_ID, Name, FamilyName, Speciality, Phone_number))
-    conn.commit()
-    conn.close()
+    # Exécuter la requête SQL en utilisant des paramètres de requête
+    c.execute("SELECT Athlete_ID FROM Identity WHERE FamilyName = ? AND Prenom = ?", (NomSportif, PrenomSportif))
+    athlete_id = c.fetchone()[0]
 
-    return jsonify({'message': 'Staff stats added successfully'})
+    if athlete_id:
+        c.execute("INSERT INTO Staff (Staff_ID, Name, FamilyName, Speciality, Phone_number, email, athlete_id) VALUES (?, ?, ?, ?, ?, ?, ?)", (Staff_ID, Name, FamilyName, Speciality, Phone_number, email, athlete_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'message': 'Staff stats added successfully'})
+    else:
+        return jsonify({'message': 'Mauvais Nom ou Prénom'})
+
+    
 
 
 @app.route('/get_staff', methods=['GET'])
@@ -243,15 +265,41 @@ def score():
     # retrieve the last score value from the database
     c.execute("SELECT Score FROM Score ORDER BY Date DESC LIMIT 1")
     last_score = c.fetchone()[0]
-    print(last_score)
+    c.execute("SELECT email FROM Staff WHERE athlete_id = ?", (Athlete_ID,))
+    email = c.fetchone()[0]
+    c.execute("SELECT Prenom FROM Identity WHERE athlete_id = ?", (Athlete_ID,))
+    prenom = c.fetchone()[0]
+    c.execute("SELECT FamilyName FROM Identity WHERE athlete_id = ?", (Athlete_ID,))
+    nom = c.fetchone()[0]
 
 
     conn.close()
 
+    #Si le score est supérieur à 7 alors envoie de mail
+    if last_score > 7:
+        # Définir les détails du message
+        msg = MIMEMultipart()
+        msg['From'] = MY_ADDRESS
+        msg['To'] = email
+        msg['Subject'] = 'Attention ! Votre sportif vient d\'atteindre une valeur de fatigue critique !'
 
+        body = "Bonjour,\nNous avons estimé que le sportif " + prenom + " " + nom + " a atteint une valeur critique de fatigue. \nCette valeur est de " + str(last_score) + "\nVeuillez prendre les mesures necessaires pour éviter toutes blessures."
+        msg.attach(MIMEText(body, 'plain'))
+
+        #Connexion au serveur Gmail
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(MY_ADDRESS, PASSWORD)
+
+        # Envoyer l'email
+        text = msg.as_string()
+        server.sendmail(MY_ADDRESS, email, text)
+
+        # Fermer la connexion au serveur
+        server.quit()
     
 
-    g.set(last_score)
+    info.set(last_score)
     #metrics.gauge('last_score', 'Last user score')(last_score)
     #metric_name = 'Score'
     #metrics.info(metric_name, 'Last user score', value=last_score)
