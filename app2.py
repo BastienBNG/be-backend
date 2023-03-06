@@ -7,6 +7,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
+import requests
+import json
 
 
 app = Flask(__name__)
@@ -32,10 +34,12 @@ def identity():
     Prenom = request.json['Prenom']
     FamilyName = request.json['FamilyName']
     Birth_Date = request.json['Birth_Date']
+    Sex = request.json['Sex']
+    Taille = request.json['Taille']
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Identity (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date) VALUES (?, ?, ?, ?, ?)", (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date))
+    c.execute("INSERT INTO Identity (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date, Sex, Taille) VALUES (?, ?, ?, ?, ?, ?, ?)", (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date, Sex, Taille))
     conn.commit()
     conn.close()
 
@@ -66,10 +70,11 @@ def sport():
     Date_of_last_training = request.json['Date_of_last_training']
     Muscle_used_in_the_last_workout = request.json['Muscle_used_in_the_last_workout']
     Recovery_status = request.json['Recovery_status']
+    frequence_training_week = request.json['frequence_training_week']
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Sport (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status) VALUES (?, ?, ?, ?, ?)", (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status))
+    c.execute("INSERT INTO Sport (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week) VALUES (?, ?, ?, ?, ?, ?)", (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week))
     conn.commit()
     conn.close()
 
@@ -97,10 +102,11 @@ def injuries():
     Date = request.json['Date']
     Position = request.json['Position']
     Intensity = request.json['Intensity']
+    Injury_status = request.json['Injury_status']
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Injuries (Athlete_ID, Date, Position, Intensity) VALUES (?, ?, ?, ?)", (Athlete_ID, Date, Position, Intensity))
+    c.execute("INSERT INTO Injuries (Athlete_ID, Date, Position, Intensity, Injury_status) VALUES (?, ?, ?, ?, ?)", (Athlete_ID, Date, Position, Intensity, Injury_status))
     conn.commit()
     conn.close()
 
@@ -161,12 +167,131 @@ def selfeval():
     Aches_pains = request.json['Aches_pains']
     Mood_stress = request.json['Mood_stress']
     Weight = request.json['Weight']
+    Date = time.strftime('%Y-%m-%d %H:%M:%S')
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Self_evaluation (Athlete_ID, Sleep, General_tiredness, Aches_pains, Mood_stress, Weight) VALUES (?, ?, ?, ?, ?, ?)", (Athlete_ID, Sleep, General_tiredness, Aches_pains, Mood_stress, Weight))
+    c.execute("INSERT INTO Self_evaluation (Athlete_ID, Sleep, General_tiredness, Aches_pains, Mood_stress, Weight, Date) VALUES (?, ?, ?, ?, ?, ?, ?)", (Athlete_ID, Sleep, General_tiredness, Aches_pains, Mood_stress, Weight, Date))
     conn.commit()
+    
+    
+    c.execute("SELECT * FROM Identity WHERE Athlete_ID = ?", (Athlete_ID))
+    Identityjson = c.fetchone()
+    columns = [col[0] for col in c.description]
+    IdentityDict = dict(zip(columns, Identityjson))
+    Identityout = json.dumps(IdentityDict)
+
+    c.execute("SELECT * FROM Sport WHERE Athlete_ID = ?", (Athlete_ID))
+    Sportjson = c.fetchone()
+    columns = [col[0] for col in c.description]
+    SportDict = dict(zip(columns, Sportjson))
+    Sportout = json.dumps(SportDict)
+
+    c.execute("SELECT * FROM Self_evaluation WHERE Athlete_ID = ? ORDER BY Date DESC LIMIT 1;", (Athlete_ID))
+    Self_evaluationjson = c.fetchone()
+    columns = [col[0] for col in c.description]
+    Self_evaluationDict = dict(zip(columns, Self_evaluationjson))
+    Self_evaluationout = json.dumps(Self_evaluationDict)
+
+    c.execute("SELECT * FROM Injuries WHERE Athlete_ID = ?", (Athlete_ID))
+    Injuriesjson = c.fetchone()
+    columns = [col[0] for col in c.description]
+    InjuriesDict = dict(zip(columns, Injuriesjson))
+    Injuriesout = json.dumps(InjuriesDict)
+
+    c.execute("SELECT * FROM Training_stat WHERE Athlete_ID = ?", (Athlete_ID))
+    Training_statjson = c.fetchone()
+    columns = [col[0] for col in c.description]
+    Training_statDict = dict(zip(columns, Training_statjson))
+    Training_statout = json.dumps(Training_statDict)
+    
+    
+    
     conn.close()
+
+    json_data = [{
+    "Identity":Identityout,
+    "Sport":Sportout,
+    "Self_evaluation":Self_evaluationout,
+    "Injuries":Injuriesout,
+    "Training_stat":Training_statout
+    }]
+    
+    
+    print(json_data)
+
+    '''
+    json_data = [
+  {
+    "Identity": {
+      "Athlete_ID": 101,
+      "Sport": "football",
+      "Prenom": "John",
+      "FamilyName": "Doe",
+      "Birth_Date": "1995/03/22",
+      "Sex": "M",
+      "Taille": 180
+    },
+    "Sport": {
+      "Sport_ID": 201,
+      "Athlete_ID": 101,
+      "Date_of_last_competition": "2022/02/05",
+      "Date_of_last_training": "2022/02/10",
+      "Muscle_used_in_the_last_workout": "Jambe",
+      "Recovery_status": 7,
+      "training_frequency_week":2
+    },
+    "Self_evaluation": {
+      "Athlete_ID": 101,
+      "Sleep": 10,
+      "General_tiredness": 10,
+      "Aches_pains": 10,
+      "Mood_stress": 10,
+      "Weight": 75
+    },
+    "Injuries": {
+      "Athlete_ID": 101,
+      "Date": "2020/02/15",
+      "Position": "Poignet",
+      "Intensity": 10,
+      "injury_status": 30
+    },
+    "Staff": {
+      "Staff_ID": 301,
+      "Name": "Julia",
+      "FamilyName": "Smith",
+      "Speciality": "physiotherapist",
+      "Phone_number": 123456789,
+      "email": "julia.smith@gmail.com",
+      "athlete_id": "101"
+    },
+    "Training_stat": {
+      "Athlete_ID": 101,
+      "Title": "Interval training",
+      "Description": "High intensity interval training for 30 minutes",
+      "Date": "2022/02/12",
+      "Duration_time": 5,
+      "Intensity_of_last_training": 4
+    },
+    "Advice": {
+      "Staff_ID": 301,
+      "Athlete_ID": 101,
+      "Date": "2022/02/15",
+      "Advice": "Rest for a few days and apply ice to the injured area."
+    },
+    "Score": {
+      "Athlete_ID": 101,
+      "Score": 75,
+      "Date": "2022/02/14"
+    }
+  }] '''
+  
+    #print(json_data)
+
+    # Faire une demande POST à une autre URL
+    url = 'http://127.0.0.1:2000/ia'
+    headers = {'Content-type': 'application/json'}
+    response = requests.post(url, json=json_data, headers=headers)
 
     return jsonify({'message': 'Self evaluation stats added successfully'})
 
@@ -206,7 +331,9 @@ def staff():
         conn.close()
         return jsonify({'message': 'Staff stats added successfully'})
     else:
+        conn.close()
         return jsonify({'message': 'Mauvais Nom ou Prénom'})
+
 
     
 
@@ -276,7 +403,7 @@ def score():
     conn.close()
 
     #Si le score est supérieur à 7 alors envoie de mail
-    if last_score > 7:
+    if last_score > 50:
         # Définir les détails du message
         msg = MIMEMultipart()
         msg['From'] = MY_ADDRESS

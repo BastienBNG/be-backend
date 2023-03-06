@@ -13,18 +13,20 @@ CREATE TABLE Identity (
      Sport  string  NOT NULL ,
      Prenom  string  NOT NULL ,
      FamilyName  string  NOT NULL ,
-     Birth_Date  date  NOT NULL
+     Birth_Date  date  NOT NULL ,
+     Sex string NOT NULL ,
+     Taille int NOT NULL
 );
 
 
 
 CREATE TABLE  Sport  (
-     Sport_ID  INTEGER INTEGER PRIMARY KEY,
      Athlete_ID  int  NOT NULL ,
      Date_of_last_competition  date  NOT NULL ,
      Date_of_last_training  date  NOT NULL ,
      Muscle_used_in_the_last_workout  string  NOT NULL ,
-     Recovery_status  string  NOT NULL 
+     Recovery_status  string  NOT NULL ,
+     frequence_training_week int
 );
 
 CREATE TABLE  Self_evaluation  (
@@ -33,14 +35,17 @@ CREATE TABLE  Self_evaluation  (
      General_tiredness  string  NOT NULL ,
      Aches_pains  string  NOT NULL ,
      Mood_stress  string  NOT NULL ,
-     Weight  int  NOT NULL 
+     Weight  int  NOT NULL ,
+     Date date NOT NULL
 );
 
 CREATE TABLE  Injuries  (
      Athlete_ID  int  NOT NULL ,
      Date  date  NOT NULL ,
      Position  string  NOT NULL ,
-     Intensity  string  NOT NULL 
+     Intensity  string  NOT NULL ,
+     Injury_status int 
+     
 );
 
 CREATE TABLE  Staff  (
@@ -62,7 +67,7 @@ CREATE TABLE  Training_stat  (
      Description  string  NOT NULL ,
      Date  date  NOT NULL ,
      Duration_time  string  NOT NULL ,
-     Intensity_of_last_training  int  NOT NULL 
+     Intensity_of_last_training  int  NOT NULL
 );
 
 CREATE TABLE  Advice  (
