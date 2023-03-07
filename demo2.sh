@@ -1,0 +1,1 @@
+curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Sleep":"7","General_tiredness":"5", "Aches_pains":"5","Mood_stress":"5", "Weight":"89"}' https://0d84-92-184-102-148.eu.ngrok.io/selfeval

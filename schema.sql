@@ -49,16 +49,14 @@ CREATE TABLE  Injuries  (
 );
 
 CREATE TABLE  Staff  (
-     Staff_ID  int  NOT NULL ,
+     Staff_ID  INTEGER PRIMARY KEY AUTOINCREMENT ,
      Name  string  NOT NULL ,
      FamilyName  string  NOT NULL ,
      Speciality  string  NOT NULL ,
      Phone_number  int  NOT NULL ,
      email string NOT NULL ,
-     athlete_id string,
-    PRIMARY KEY (
-         Staff_ID 
-    )
+     athlete_id string
+    
 );
 
 CREATE TABLE  Training_stat  (

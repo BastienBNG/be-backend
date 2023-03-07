@@ -45,7 +45,7 @@ def identity():
 
     metrics.counter('users_added', 'Nombre d\'utilisateurs ajoutés à la base de données', labels={'name': Prenom})
 
-    return jsonify({'message': 'User added successfully'})
+    return jsonify({'message': 'Les données de l\'utilisateur ont bien été ajoutées'})
 
 @app.route('/get_identity', methods=['GET'])
 def get_identity():
@@ -80,7 +80,7 @@ def sport():
 
     metrics.counter('sport_added', 'Nombre de\'sport ajoutés à la base de données', labels={'Sport': Date_of_last_competition})
 
-    return jsonify({'message': 'Sport stats added successfully'})
+    return jsonify({'message': 'Les données du Sport ont bien été ajoutées'})
 
 
 @app.route('/get_sport', methods=['GET'])
@@ -111,7 +111,7 @@ def injuries():
     conn.close()
 
 
-    return jsonify({'message': 'Injury stats added successfully'})
+    return jsonify({'message': 'Les données concernant la dernière blessure ont bien été ajoutées'})
 
 
 @app.route('/get_injuries', methods=['GET'])
@@ -142,7 +142,7 @@ def trainingstat():
 
 
 
-    return jsonify({'message': 'Training stats added successfully'})
+    return jsonify({'message': 'Les données concernant le dernier entrainement ont bien été ajoutées'})
 
 
 @app.route('/get_trainingstat', methods=['GET'])
@@ -289,11 +289,11 @@ def selfeval():
     #print(json_data)
 
     # Faire une demande POST à une autre URL
-    url = 'http://127.0.0.1:2000/ia'
+    url = 'http://ia.default.svc.cluster.local:2000/ia'
     headers = {'Content-type': 'application/json'}
     response = requests.post(url, json=json_data, headers=headers)
 
-    return jsonify({'message': 'Self evaluation stats added successfully'})
+    return jsonify({'message': 'Les données de votre auto-évaluation ont bien été enregistrées, votre score vas etre mis à jour'})
 
 
 @app.route('/get_selfeval', methods=['GET'])
@@ -310,7 +310,7 @@ def get_selfeval():
 
 @app.route('/staff', methods=['POST'])
 def staff():
-    Staff_ID = request.json['Staff_ID']
+    #Staff_ID = request.json['Staff_ID']
     Name = request.json['Name']
     FamilyName = request.json['FamilyName']
     Speciality = request.json['Speciality']
@@ -326,13 +326,13 @@ def staff():
     athlete_id = c.fetchone()[0]
 
     if athlete_id:
-        c.execute("INSERT INTO Staff (Staff_ID, Name, FamilyName, Speciality, Phone_number, email, athlete_id) VALUES (?, ?, ?, ?, ?, ?, ?)", (Staff_ID, Name, FamilyName, Speciality, Phone_number, email, athlete_id))
+        c.execute("INSERT INTO Staff (Name, FamilyName, Speciality, Phone_number, email, athlete_id) VALUES (?, ?, ?, ?, ?, ?)", (Name, FamilyName, Speciality, Phone_number, email, athlete_id))
         conn.commit()
         conn.close()
-        return jsonify({'message': 'Staff stats added successfully'})
+        return jsonify({'message': 'Les données du staff ont bien été ajoutées'})
     else:
         conn.close()
-        return jsonify({'message': 'Mauvais Nom ou Prénom'})
+        return jsonify({'message': 'Le nom ou le prénom n\'existe pas'})
 
 
     
@@ -364,7 +364,7 @@ def advice():
     conn.commit()
     conn.close()
 
-    return jsonify({'message': 'Advice stats added successfully'})
+    return jsonify({'message': 'Les conseils ont bien été ajoutées'})
 
 
 @app.route('/get_advice', methods=['GET'])
@@ -399,18 +399,18 @@ def score():
     c.execute("SELECT FamilyName FROM Identity WHERE athlete_id = ?", (Athlete_ID,))
     nom = c.fetchone()[0]
 
-
+    last_score_entier = int(last_score)
     conn.close()
 
-    #Si le score est supérieur à 7 alors envoie de mail
-    if last_score > 50:
+    #Si le score est supérieur à 50 alors envoie de mail
+    if last_score_entier > 50:
         # Définir les détails du message
         msg = MIMEMultipart()
         msg['From'] = MY_ADDRESS
         msg['To'] = email
         msg['Subject'] = 'Attention ! Votre sportif vient d\'atteindre une valeur de fatigue critique !'
 
-        body = "Bonjour,\nNous avons estimé que le sportif " + prenom + " " + nom + " a atteint une valeur critique de fatigue. \nCette valeur est de " + str(last_score) + "\nVeuillez prendre les mesures necessaires pour éviter toutes blessures."
+        body = "Bonjour,\nNous avons estimé que le sportif " + prenom + " " + nom + " a atteint une valeur critique de fatigue. \nCette valeur est de " + str(last_score_entier) + "\nVeuillez prendre les mesures necessaires pour éviter toutes blessures."
         msg.attach(MIMEText(body, 'plain'))
 
         #Connexion au serveur Gmail
@@ -431,7 +431,7 @@ def score():
     #metric_name = 'Score'
     #metrics.info(metric_name, 'Last user score', value=last_score)
 
-    return jsonify({'message': 'Score stats added successfully'})
+    return jsonify({'message': 'Les données concernant le dernier score ont bien été ajoutées'})
 
 
 @app.route('/get_score', methods=['GET'])
