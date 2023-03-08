@@ -53,9 +53,9 @@ CREATE TABLE  Staff  (
      Name  string  NOT NULL ,
      FamilyName  string  NOT NULL ,
      Speciality  string  NOT NULL ,
-     Phone_number  int  NOT NULL ,
+     Phone_number  varchar  NOT NULL ,
      email string NOT NULL ,
-     athlete_id string
+     athlete_id int
     
 );
 
@@ -69,10 +69,9 @@ CREATE TABLE  Training_stat  (
 );
 
 CREATE TABLE  Advice  (
-     Staff_ID  int  NOT NULL ,
      Athlete_ID  int  NOT NULL ,
-     Date  date  NOT NULL ,
-     Advice  string  NOT NULL 
+     titre  string NOT NULL ,
+     description  string  NOT NULL 
 );
 
 CREATE TABLE  Score  (

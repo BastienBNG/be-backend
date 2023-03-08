@@ -6,6 +6,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Date":"2
 sleep 1
 curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Title":"Cardio","Description":"Entrainement de course", "Date":"2023/05/20", "Duration_time":"90","Intensity_of_last_training":"4"}' https://0d84-92-184-102-148.eu.ngrok.io/trainingstat
 sleep 1
-curl -X POST -H "Content-Type: application/json" -d '{"Name":"Jacques", "FamilyName":"Vier","Speciality":"Coach", "Phone_number":"0652945183", "email":"beprojectisen@gmail.com", "NomSportif":"Bernard", "PrenomSportif":"Jean"}' https://0d84-92-184-102-148.eu.ngrok.io/staff
+curl -X POST -H "Content-Type: application/json" -d '{"Name":"Jacques", "FamilyName":"test","Speciality":"Coach", "Phone_number":"0652945183", "email":"beprojectisen@gmail.com", "NomSportif":"Bernard", "PrenomSportif":"Jean"}' https://0d84-92-184-102-148.eu.ngrok.io/staff
 sleep 1
-curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Sleep":"7","General_tiredness":"5", "Aches_pains":"5","Mood_stress":"5", "Weight":"89"}' https://0d84-92-184-102-148.eu.ngrok.io/selfeval
+curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Sleep":"8","General_tiredness":"2", "Aches_pains":"2","Mood_stress":"2", "Weight":"65"}' https://0d84-92-184-102-148.eu.ngrok.io/selfeval
+

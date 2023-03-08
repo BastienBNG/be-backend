@@ -29,8 +29,8 @@ SELF EVAL : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"
 
 TRAINING STAT : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Title":"Cardio","Description":"Entrainement de course", "Date":"2023/05/20", "Duration_time":"90","Intensity_of_last_training":"4"}' http://localhost:8080/trainingstat -v
 
-STAFF : curl -X POST -H "Content-Type: application/json" -d '{"Staff_ID":"7","Name":"Jacques", "FamilyName":"Vier","Speciality":"Coach", "Phone_number":"0652945183", "email":"beprojectisen@gmail.com", "NomSportif":"Bernard", "PrenomSportif":"Jean"}' http://localhost:8080/staff -v
+STAFF : curl -X POST -H "Content-Type: application/json" -d '{"Name":"Jacques", "FamilyName":"Vier","Speciality":"Coach", "Phone_number":"0652945183", "email":"beprojectisen@gmail.com", "NomSportif":"Bernard", "PrenomSportif":"Jean"}' http://localhost:8080/staff -v
 
 ADVICE : curl -X POST -H "Content-Type: application/json" -d '{"Staff_ID":"1", "Athlete_ID":"2","Date":"2022/02/27", "Advice":"dors sale chien"}' http://localhost:8080/advice -v
 
-SCORE : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"1","Score":"5"}' http://localhost:8080/score -v
+SCORE : curl -X POST -H "Content-Type: application/json" -d '{"Athlete_ID":"2","Score":"5"}' http://localhost:8080/score -v

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, url_for, g
 import sqlite3
 import time
 from prometheus_flask_exporter import PrometheusMetrics
@@ -9,6 +9,9 @@ import os
 from dotenv import load_dotenv
 import requests
 import json
+from flask_oidc import OpenIDConnect
+
+
 
 
 app = Flask(__name__)
@@ -25,10 +28,25 @@ MY_ADDRESS = 'bongiornobastien@gmail.com'
 PASSWORD = os.getenv('PASSWORD')
 
 
+#CONFIG OIDC 
+app.config.update({
+    'SECRET_KEY': 'your-secret-key',
+    'OIDC_CLIENT_SECRETS': 'client_secrets.json',
+    'OIDC_RESOURCE_SERVER_ONLY': True ,
+    'OIDC_TOKEN_TYPE_HINT':'access_token',
+    'OIDC_INTROSPECTION_AUTH_METHOD':'client_secret_post',
+    'OIDC_SCOPES':'openid profile'
+})
+
+oidc = OpenIDConnect(app)
+
 #IDENTITE DU SPORTIF
+#@oidc.require_login
+
 
 @app.route('/identity', methods=['POST'])
 def identity():
+    #Athlete_ID = g.oidc_token_info['sub']
     Athlete_ID = request.json['Athlete_ID']
     Sport = request.json['Sport']
     Prenom = request.json['Prenom']
@@ -37,9 +55,13 @@ def identity():
     Sex = request.json['Sex']
     Taille = request.json['Taille']
 
+    #Keycloak values
+    #Athlete_ID = oidc.user_getfield('sub')
+    #FamilyName= user_info.get('family_name')
+
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Identity (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date, Sex, Taille) VALUES (?, ?, ?, ?, ?, ?, ?)", (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date, Sex, Taille))
+    c.execute("INSERT INTO Identity (Athlete_ID, Sport, Prenom, FamilyName, Birth_Date, Sex, Taille) VALUES (?, ?, ?, ?, ?, ?, ?)", (hash(Athlete_ID), Sport, Prenom, FamilyName, Birth_Date, Sex, Taille))
     conn.commit()
     conn.close()
 
@@ -65,6 +87,7 @@ def get_identity():
 
 @app.route('/sport', methods=['POST'])
 def sport():
+    #Athlete_ID = hash(g.oidc_token_info['sub'])
     Athlete_ID = request.json['Athlete_ID']
     Date_of_last_competition = request.json['Date_of_last_competition']
     Date_of_last_training = request.json['Date_of_last_training']
@@ -74,7 +97,7 @@ def sport():
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Sport (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week) VALUES (?, ?, ?, ?, ?, ?)", (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week))
+    c.execute("INSERT INTO Sport (Athlete_ID, Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week) VALUES (?, ?, ?, ?, ?, ?)", (hash(Athlete_ID), Date_of_last_competition, Date_of_last_training, Muscle_used_in_the_last_workout, Recovery_status, frequence_training_week))
     conn.commit()
     conn.close()
 
@@ -97,8 +120,10 @@ def get_sport():
 
 # Injuries
 @app.route('/injuries', methods=['POST'])
+@oidc.accept_token(require_token=True)
 def injuries():
-    Athlete_ID = request.json['Athlete_ID']
+    Athlete_ID = hash(g.oidc_token_info['sub'])
+    #Athlete_ID = request.json['Athlete_ID']
     Date = request.json['Date']
     Position = request.json['Position']
     Intensity = request.json['Intensity']
@@ -115,6 +140,7 @@ def injuries():
 
 
 @app.route('/get_injuries', methods=['GET'])
+@oidc.accept_token(require_token=True)
 def get_injuries():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -126,8 +152,10 @@ def get_injuries():
 
 #Training Stat
 @app.route('/trainingstat', methods=['POST'])
+@oidc.accept_token(require_token=True)
 def trainingstat():
-    Athlete_ID = request.json['Athlete_ID']
+    Athlete_ID = hash(g.oidc_token_info['sub'])
+    #Athlete_ID = request.json['Athlete_ID']
     Title = request.json['Title']
     Description = request.json['Description']
     Date = request.json['Date']
@@ -146,6 +174,7 @@ def trainingstat():
 
 
 @app.route('/get_trainingstat', methods=['GET'])
+@oidc.accept_token(require_token=True)
 def get_trainingstat():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -160,8 +189,10 @@ def get_trainingstat():
  #SELFEVALUATION
 
 @app.route('/selfeval', methods=['POST'])
+@oidc.accept_token(require_token=True)
 def selfeval():
-    Athlete_ID = request.json['Athlete_ID']
+    Athlete_ID = hash(g.oidc_token_info['sub'])
+    #Athlete_ID = request.json['Athlete_ID']
     Sleep = request.json['Sleep']
     General_tiredness = request.json['General_tiredness']
     Aches_pains = request.json['Aches_pains']
@@ -297,6 +328,7 @@ def selfeval():
 
 
 @app.route('/get_selfeval', methods=['GET'])
+@oidc.accept_token(require_token=True)
 def get_selfeval():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -309,6 +341,7 @@ def get_selfeval():
 #STAFF
 
 @app.route('/staff', methods=['POST'])
+@oidc.accept_token(require_token=True)
 def staff():
     #Staff_ID = request.json['Staff_ID']
     Name = request.json['Name']
@@ -316,29 +349,27 @@ def staff():
     Speciality = request.json['Speciality']
     Phone_number = request.json['Phone_number']
     email = request.json['email']
-    NomSportif = request.json['NomSportif']
-    PrenomSportif = request.json['PrenomSportif']
+    #NomSportif = request.json['NomSportif']
+    #PrenomSportif = request.json['PrenomSportif']
+    Athlete_ID = hash(g.oidc_token_info['sub'])
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     # Exécuter la requête SQL en utilisant des paramètres de requête
-    c.execute("SELECT Athlete_ID FROM Identity WHERE FamilyName = ? AND Prenom = ?", (NomSportif, PrenomSportif))
-    athlete_id = c.fetchone()[0]
+    #c.execute("SELECT Athlete_ID FROM Identity WHERE FamilyName = ? AND Prenom = ?", (NomSportif, PrenomSportif))
+    #athlete_id = c.fetchone()[0]
 
-    if athlete_id:
-        c.execute("INSERT INTO Staff (Name, FamilyName, Speciality, Phone_number, email, athlete_id) VALUES (?, ?, ?, ?, ?, ?)", (Name, FamilyName, Speciality, Phone_number, email, athlete_id))
-        conn.commit()
-        conn.close()
-        return jsonify({'message': 'Les données du staff ont bien été ajoutées'})
-    else:
-        conn.close()
-        return jsonify({'message': 'Le nom ou le prénom n\'existe pas'})
+    c.execute("INSERT INTO Staff (Name, FamilyName, Speciality, Phone_number, email, athlete_id) VALUES (?, ?, ?, ?, ?, ?)", (Name, FamilyName, Speciality, Phone_number, email, Athlete_ID))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Les données du staff ont bien été ajoutées'})
 
 
     
 
 
 @app.route('/get_staff', methods=['GET'])
+@oidc.accept_token(require_token=True)
 def get_staff():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -353,14 +384,13 @@ def get_staff():
 
 @app.route('/advice', methods=['POST'])
 def advice():
-    Staff_ID = request.json['Staff_ID']
     Athlete_ID = request.json['Athlete_ID']
-    Date = request.json['Date']
-    Advice = request.json['Advice']
+    titre = request.json['titre']
+    description = request.json['description']
 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute("INSERT INTO Advice (Staff_ID, Athlete_ID, Date, Advice) VALUES (?, ?, ?, ?)", (Staff_ID, Athlete_ID, Date, Advice))
+    c.execute("INSERT INTO Advice (Athlete_ID, titre, description) VALUES (?, ?, ?)", (hash(Athlete_ID), titre, description))
     conn.commit()
     conn.close()
 
@@ -381,7 +411,7 @@ def get_advice():
 
 @app.route('/score', methods=['POST'])
 def score():
-    Athlete_ID = request.json['Athlete_ID']
+    Athlete_ID = hash(g.oidc_token_info['sub'])
     Score = request.json['Score']
     Date = time.strftime('%Y-%m-%d %H:%M:%S')
 
@@ -402,28 +432,48 @@ def score():
     last_score_entier = int(last_score)
     conn.close()
 
-    #Si le score est supérieur à 50 alors envoie de mail
-    if last_score_entier > 50:
+    #Si le score est supérieur à 5 alors envoie de mail
+    if last_score_entier > 4:
         # Définir les détails du message
-        msg = MIMEMultipart()
-        msg['From'] = MY_ADDRESS
-        msg['To'] = email
-        msg['Subject'] = 'Attention ! Votre sportif vient d\'atteindre une valeur de fatigue critique !'
+      msg = MIMEMultipart()
+      msg['From'] = MY_ADDRESS
+      msg['To'] = email
+      msg['Subject'] = 'Attention ! Votre sportif vient d\'atteindre une valeur de fatigue critique !'
 
-        body = "Bonjour,\nNous avons estimé que le sportif " + prenom + " " + nom + " a atteint une valeur critique de fatigue. \nCette valeur est de " + str(last_score_entier) + "\nVeuillez prendre les mesures necessaires pour éviter toutes blessures."
-        msg.attach(MIMEText(body, 'plain'))
+      # Définition du style CSS dans l'en-tête du message
+      html = """
+          <html>
+              <head>
+                  <style>
+                      p {{
+                          font-size: 20pt;
+                      }}
+                      span {{
+                          color: red;
+                          font-size: 20pt;
+                      }}
+                  </style>
+              </head>
+              <body>
+                  <p>Bonjour,</p>
+                  <p>Nous avons estimé que le sportif <span>{} {}</span> a atteint une valeur critique de fatigue.</p>
+                  <p>Cette valeur est de <span>{}</span>/10.</p>
+                  <p>Veuillez prendre les mesures nécessaires pour éviter toutes blessures.</p>
+              </body>
+          </html>
+      """.format(prenom, nom, str(last_score_entier))
 
-        #Connexion au serveur Gmail
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(MY_ADDRESS, PASSWORD)
 
-        # Envoyer l'email
-        text = msg.as_string()
-        server.sendmail(MY_ADDRESS, email, text)
 
-        # Fermer la connexion au serveur
-        server.quit()
+      msg.attach(MIMEText(html, 'html'))
+
+      # Connexion au serveur Gmail et envoi du message
+      server = smtplib.SMTP('smtp.gmail.com', 587)
+      server.starttls()
+      server.login(MY_ADDRESS, PASSWORD)
+      server.sendmail(MY_ADDRESS, email, msg.as_string())
+      server.quit()
+
     
 
     info.set(last_score)
@@ -445,6 +495,19 @@ def get_score():
     return jsonify({'Score': Score})
 
 
+
+
+@app.route('/test1', methods=['GET'])
+@oidc.accept_token(require_token=True)
+def test1():
+    #athlete_id = oidc.user_getfield('sub')
+    athlete_id = g.oidc_token_info['sub']
+    return jsonify({'test post': athlete_id})
+
+@app.route('/test2', methods=['POST'])
+@oidc.accept_token(require_token=True)
+def test2():
+    return jsonify({'message': 'test get'})
 
 if __name__ == '__main__':
     app.run('0.0.0.0', 8080)

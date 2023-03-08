@@ -3,3 +3,5 @@ prometheus-client==0.16.0
 prometheus-flask-exporter==0.21.0
 python-dotenv==1.0.0
 requests==2.25.1
+flask-oidc==1.4.0
+itsdangerous==2.0.0
